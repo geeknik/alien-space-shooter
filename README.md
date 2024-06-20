@@ -1,5 +1,7 @@
 # Alien Space Shooter
 
+![Image](https://github.com/geeknik/alien-space-shooter/assets/466878/6ede2bfc-18f4-42d7-b840-8e55f760608b)
+
 Welcome to Alien Space Shooter, a fun and engaging browser-based game where you defend Earth from an alien invasion!
 
 ## Table of Contents
