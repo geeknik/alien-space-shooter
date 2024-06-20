@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alien Space Shooter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+        }
+        #gameArea {
+            width: 300px;
+            height: 400px;
+            border: 2px solid #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .sprite {
+            position: absolute;
+            font-size: 24px;
+        }
+        #score, #stage {
+            position: absolute;
+            top: 10px;
+            z-index: 10;
+        }
+        #score { left: 10px; }
+        #stage { right: 10px; }
+        .star {
+            position: absolute;
+            background-color: #fff;
+            width: 1px;
+            height: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="score">Score: <span id="scoreValue">0</span></div>
+        <div id="stage">Stage: <span id="stageValue">1</span></div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const scoreValue = document.getElementById('scoreValue');
+        const stageValue = document.getElementById('stageValue');
+        let score = 0;
+        let stage = 1;
+        let player;
+        let shootingInterval;
+        let aliensRemaining = 0;
+        let playerShield = 0;
+        let playerBulletType = 'normal';
+        let gameActive = false;
+
+        const sprites = {
+            player: '🚀',
+            alien: '👾',
+            playerBullet: '•',
+            alienBullet: '⤓',
+            explosion: '💥',
+            shield: '🛡️',
+            extraBullets: '🔫',
+            missile: '🚀'
+        };
+
+        function createSprite(type, x, y) {
+            const sprite = document.createElement('div');
+            sprite.className = 'sprite';
+            sprite.innerHTML = sprites[type];
+            sprite.style.left = `${x}px`;
+            sprite.style.top = `${y}px`;
+            gameArea.appendChild(sprite);
+            return sprite;
+        }
+
+        function moveSprite(sprite, dx, dy) {
+            const x = parseInt(sprite.style.left) + dx;
+            const y = parseInt(sprite.style.top) + dy;
+            sprite.style.left = `${x}px`;
+            sprite.style.top = `${y}px`;
+        }
+
+        function removeSprite(sprite) {
+            if (sprite && sprite.parentNode) {
+                sprite.parentNode.removeChild(sprite);
+            }
+        }
+
+        function createPlayer() {
+            player = createSprite('player', 150, 350);
+            gameArea.addEventListener('mousemove', (e) => {
+                if (!gameActive) return;
+                const rect = gameArea.getBoundingClientRect();
+                const x = e.clientX - rect.left - 12;
+                player.style.left = `${Math.max(0, Math.min(x, 276))}px`;
+            });
+        }
+
+        function createAlien() {
+            if (!gameActive) return;
+            const x = Math.random() * 276;
+            const alien = createSprite('alien', x, 50);
+            let dx = (Math.random() - 0.5) * 2;
+            let dy = (Math.random() - 0.5) * 2;
+
+            const moveAlien = () => {
+                if (!gameActive) {
+                    removeSprite(alien);
+                    return;
+                }
+                const x = parseInt(alien.style.left);
+                const y = parseInt(alien.style.top);
+
+                if (x <= 0 || x >= 276) dx = -dx;
+                if (y <= 20 || y >= 133) dy = -dy;  // Adjusted to cover upper third
+
+                moveSprite(alien, dx, dy);
+
+                if (Math.random() < 0.02) {
+                    shootAlienBullet(alien);
+                }
+
+                if (alien.parentNode) {
+                    requestAnimationFrame(moveAlien);
+                }
+            };
+            moveAlien();
+        }
+
+        function shoot() {
+            if (!gameActive) return;
+            const x = parseInt(player.style.left) + 12;
+            if (playerBulletType === 'normal') {
+                createBullet(x, 350, 'playerBullet', 0, -5);
+            } else if (playerBulletType === 'triple') {
+                createBullet(x - 10, 350, 'playerBullet', -1, -5);
+                createBullet(x, 350, 'playerBullet', 0, -5);
+                createBullet(x + 10, 350, 'playerBullet', 1, -5);
+            } else if (playerBulletType === 'missile') {
+                createMissile(x, 350);
+            }
+        }
+
+        function createBullet(x, y, type, dx, dy) {
+            const bullet = createSprite(type, x, y);
+            const moveBullet = () => {
+                if (!gameActive) {
+                    removeSprite(bullet);
+                    return;
+                }
+                moveSprite(bullet, dx, dy);
+                const bulletY = parseInt(bullet.style.top);
+                const bulletX = parseInt(bullet.style.left);
+                if (bulletY < 0 || bulletY > 400 || bulletX < 0 || bulletX > 300) {
+                    removeSprite(bullet);
+                } else {
+                    if (type === 'playerBullet') {
+                        checkCollision(bullet);
+                    } else {
+                        checkPlayerCollision(bullet);
+                    }
+                    requestAnimationFrame(moveBullet);
+                }
+            };
+            moveBullet();
+        }
+
+        function createMissile(x, y) {
+            const missile = createSprite('missile', x, y);
+            const moveMissile = () => {
+                if (!gameActive) {
+                    removeSprite(missile);
+                    return;
+                }
+                const target = findNearestAlien(missile);
+                if (target) {
+                    const dx = (parseInt(target.style.left) - parseInt(missile.style.left)) * 0.1;
+                    const dy = (parseInt(target.style.top) - parseInt(missile.style.top)) * 0.1;
+                    moveSprite(missile, dx, dy);
+                } else {
+                    moveSprite(missile, 0, -5);
+                }
+
+                if (parseInt(missile.style.top) < 0) {
+                    removeSprite(missile);
+                } else {
+                    checkCollision(missile);
+                    requestAnimationFrame(moveMissile);
+                }
+            };
+            moveMissile();
+        }
+
+        function findNearestAlien(missile) {
+            const aliens = document.querySelectorAll('.sprite');
+            let nearestAlien = null;
+            let minDistance = Infinity;
+
+            aliens.forEach(alien => {
+                if (alien.innerHTML === sprites.alien) {
+                    const dx = parseInt(alien.style.left) - parseInt(missile.style.left);
+                    const dy = parseInt(alien.style.top) - parseInt(missile.style.top);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestAlien = alien;
+                    }
+                }
+            });
+
+            return nearestAlien;
+        }
+
+        function shootAlienBullet(alien) {
+            if (!gameActive) return;
+            const alienX = parseInt(alien.style.left) + 12;
+            const alienY = parseInt(alien.style.top) + 24;
+            const playerX = parseInt(player.style.left) + 12;
+            const playerY = parseInt(player.style.top) + 12;
+
+            const angle = Math.atan2(playerY - alienY, playerX - alienX);
+            const speed = 3;
+            const dx = Math.cos(angle) * speed;
+            const dy = Math.sin(angle) * speed;
+
+            createBullet(alienX, alienY, 'alienBullet', dx, dy);
+        }
+
+        function checkCollision(bullet) {
+            const aliens = document.querySelectorAll('.sprite');
+            aliens.forEach(alien => {
+                if (alien.innerHTML === sprites.alien) {
+                    const alienRect = alien.getBoundingClientRect();
+                    const bulletRect = bullet.getBoundingClientRect();
+                    if (
+                        bulletRect.left < alienRect.right &&
+                        bulletRect.right > alienRect.left &&
+                        bulletRect.top < alienRect.bottom &&
+                        bulletRect.bottom > alienRect.top
+                    ) {
+                        removeSprite(alien);
+                        removeSprite(bullet);
+                        showExplosion(alienRect.left, alienRect.top);
+                        updateScore(10);
+                        aliensRemaining--;
+                        if (aliensRemaining === 0) {
+                            nextStage();
+                        }
+                    }
+                }
+            });
+        }
+
+        function checkPlayerCollision(bullet) {
+            const playerRect = player.getBoundingClientRect();
+            const bulletRect = bullet.getBoundingClientRect();
+            if (
+                bulletRect.left < playerRect.right &&
+                bulletRect.right > playerRect.left &&
+                bulletRect.top < playerRect.bottom &&
+                bulletRect.bottom > playerRect.top
+            ) {
+                removeSprite(bullet);
+                if (playerShield > 0) {
+                    playerShield--;
+                    showExplosion(playerRect.left, playerRect.top);
+                } else {
+                    showExplosion(playerRect.left, playerRect.top);
+                    endGame();
+                }
+            }
+        }
+
+        function showExplosion(x, y) {
+            const explosion = createSprite('explosion', x, y);
+            setTimeout(() => removeSprite(explosion), 300);
+        }
+
+        function updateScore(points) {
+            score += points;
+            scoreValue.textContent = score;
+        }
+
+        function nextStage() {
+            stage++;
+            stageValue.textContent = stage;
+            startStage();
+        }
+
+        function startStage() {
+            aliensRemaining = stage * 5;
+            for (let i = 0; i < aliensRemaining; i++) {
+                setTimeout(createAlien, i * 500);
+            }
+            if (Math.random() < 0.5) {
+                setTimeout(createPowerUp, Math.random() * 5000);
+            }
+        }
+
+        function createPowerUp() {
+            if (!gameActive) return;
+            const type = Math.random() < 0.33 ? 'shield' : (Math.random() < 0.5 ? 'extraBullets' : 'missile');
+            const x = Math.random() * 276;
+            const powerUp = createSprite(type, x, 0);
+            const movePowerUp = () => {
+                if (!gameActive) {
+                    removeSprite(powerUp);
+                    return;
+                }
+                moveSprite(powerUp, 0, 1);
+                if (parseInt(powerUp.style.top) > 400) {
+                    removeSprite(powerUp);
+                } else {
+                    checkPowerUpCollision(powerUp);
+                    requestAnimationFrame(movePowerUp);
+                }
+            };
+            movePowerUp();
+        }
+
+        function checkPowerUpCollision(powerUp) {
+            const playerRect = player.getBoundingClientRect();
+            const powerUpRect = powerUp.getBoundingClientRect();
+            if (
+                powerUpRect.left < playerRect.right &&
+                powerUpRect.right > playerRect.left &&
+                powerUpRect.top < playerRect.bottom &&
+                powerUpRect.bottom > playerRect.top
+            ) {
+                applyPowerUp(powerUp.innerHTML);
+                removeSprite(powerUp);
+            }
+        }
+
+        function applyPowerUp(type) {
+            switch (type) {
+                case sprites.shield:
+                    playerShield += 1;
+                    break;
+                case sprites.extraBullets:
+                    playerBulletType = 'triple';
+                    setTimeout(() => { playerBulletType = 'normal'; }, 10000);
+                    break;
+                case sprites.missile:
+                    playerBulletType = 'missile';
+                    setTimeout(() => { playerBulletType = 'normal'; }, 10000);
+                    break;
+            }
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(shootingInterval);
+            alert(`Game Over! Your score: ${score}`);
+            resetGame();
+        }
+
+        function resetGame() {
+            gameArea.innerHTML = '<div id="score">Score: <span id="scoreValue">0</span></div><div id="stage">Stage: <span id="stageValue">1</span></div>';
+            score = 0;
+            stage = 1;
+            playerShield = 0;
+            playerBulletType = 'normal';
+            scoreValue.textContent = score;
+            stageValue.textContent = stage;
+            createStars();
+            startGame();
+        }
+
+        function startGame() {
+            gameActive = true;
+            createPlayer();
+            startStage();
+            shootingInterval = setInterval(shoot, 500);
+        }
+
+        function createStars() {
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = `${Math.random() * 300}px`;
+                star.style.top = `${Math.random() * 400}px`;
+                gameArea.appendChild(star);
+            }
+        }
+
+        function moveStars() {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                const y = parseInt(star.style.top) + 1;
+                if (y > 400) {
+                    star.style.top = '0px';
+                } else {
+                    star.style.top = `${y}px`;
+                }
+            });
+            requestAnimationFrame(moveStars);
+        }
+
+        createStars();
+        moveStars();
+        startGame();
+    </script>
+</body>
+</html>
