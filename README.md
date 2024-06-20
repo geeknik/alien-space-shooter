@@ -48,7 +48,7 @@ To run the game locally:
 
 1. Clone this repository:
    ```
-   git clone https://github.com/your-username/alien-space-shooter.git
+   git clone https://github.com/geeknik/alien-space-shooter
    ```
 2. Navigate to the project directory:
    ```
