@@ -39,6 +39,33 @@
             width: 1px;
             height: 1px;
         }
+        #leaderboard {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        #leaderboard h2 {
+            text-align: center;
+            margin-top: 0;
+        }
+        #leaderboard ol {
+            padding-left: 20px;
+        }
+        #leaderboard button {
+            display: block;
+            margin: 10px auto 0;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -46,11 +73,19 @@
         <div id="score">Score: <span id="scoreValue">0</span></div>
         <div id="stage">Stage: <span id="stageValue">1</span></div>
     </div>
+    <div id="leaderboard">
+        <h2>Top 5 Scores</h2>
+        <ol id="highScores"></ol>
+        <button id="restartButton">Restart Game</button>
+    </div>
 
     <script>
         const gameArea = document.getElementById('gameArea');
         const scoreValue = document.getElementById('scoreValue');
         const stageValue = document.getElementById('stageValue');
+        const leaderboard = document.getElementById('leaderboard');
+        const highScores = document.getElementById('highScores');
+        const restartButton = document.getElementById('restartButton');
         let score = 0;
         let stage = 1;
         let player;
@@ -59,6 +94,7 @@
         let playerShield = 0;
         let playerBulletType = 'normal';
         let gameActive = false;
+        let difficultyMultiplier = 1;
 
         const sprites = {
             player: '🚀',
@@ -108,8 +144,8 @@
             if (!gameActive) return;
             const x = Math.random() * 276;
             const alien = createSprite('alien', x, 50);
-            let dx = (Math.random() - 0.5) * 2;
-            let dy = (Math.random() - 0.5) * 2;
+            let dx = (Math.random() - 0.5) * 2 * difficultyMultiplier;
+            let dy = (Math.random() - 0.5) * 2 * difficultyMultiplier;
 
             const moveAlien = () => {
                 if (!gameActive) {
@@ -120,16 +156,16 @@
                 const y = parseInt(alien.style.top);
 
                 if (x <= 0 || x >= 276) dx = -dx;
-                if (y <= 20 || y >= 133) dy = -dy;  // Adjusted to cover upper third
+                if (y <= 20 || y >= 133) dy = -dy;
 
                 moveSprite(alien, dx, dy);
 
-                if (Math.random() < 0.02) {
+                if (Math.random() < 0.02 * difficultyMultiplier) {
                     shootAlienBullet(alien);
                 }
 
                 if (alien.parentNode) {
-                    requestAnimationFrame(moveAlien);
+                    setTimeout(() => requestAnimationFrame(moveAlien), 1000 / (30 * difficultyMultiplier));
                 }
             };
             moveAlien();
@@ -227,7 +263,7 @@
             const playerY = parseInt(player.style.top) + 12;
 
             const angle = Math.atan2(playerY - alienY, playerX - alienX);
-            const speed = 3;
+            const speed = 3 * difficultyMultiplier;
             const dx = Math.cos(angle) * speed;
             const dy = Math.sin(angle) * speed;
 
@@ -292,6 +328,7 @@
         function nextStage() {
             stage++;
             stageValue.textContent = stage;
+            difficultyMultiplier += 0.1;  // Increase difficulty
             startStage();
         }
 
@@ -359,8 +396,8 @@
         function endGame() {
             gameActive = false;
             clearInterval(shootingInterval);
-            alert(`Game Over! Your score: ${score}`);
-            resetGame();
+            updateLeaderboard(score);
+            showLeaderboard();
         }
 
         function resetGame() {
@@ -369,13 +406,15 @@
             stage = 1;
             playerShield = 0;
             playerBulletType = 'normal';
+            difficultyMultiplier = 1;
             scoreValue.textContent = score;
             stageValue.textContent = stage;
             createStars();
+            hideLeaderboard();
             startGame();
         }
 
-        function startGame() {
+function startGame() {
             gameActive = true;
             createPlayer();
             startStage();
@@ -404,6 +443,31 @@
             });
             requestAnimationFrame(moveStars);
         }
+
+        function updateLeaderboard(newScore) {
+            let scores = JSON.parse(localStorage.getItem('highScores')) || [];
+            scores.push(newScore);
+            scores.sort((a, b) => b - a);
+            scores = scores.slice(0, 5);  // Keep only top 5 scores
+            localStorage.setItem('highScores', JSON.stringify(scores));
+        }
+
+        function showLeaderboard() {
+            const scores = JSON.parse(localStorage.getItem('highScores')) || [];
+            highScores.innerHTML = '';
+            scores.forEach(score => {
+                const li = document.createElement('li');
+                li.textContent = score;
+                highScores.appendChild(li);
+            });
+            leaderboard.style.display = 'block';
+        }
+
+        function hideLeaderboard() {
+            leaderboard.style.display = 'none';
+        }
+
+        restartButton.addEventListener('click', resetGame);
 
         createStars();
         moveStars();
