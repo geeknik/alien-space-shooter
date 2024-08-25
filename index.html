@@ -374,7 +374,12 @@
             score += comboPoints;
             scoreValue.textContent = score;
             comboIndicator.textContent = `Combo: x${combo}`;
-            setTimeout(() => { comboIndicator.textContent = ''; }, 2000);
+            comboIndicator.style.display = 'block';
+            clearTimeout(comboIndicator.timeout);
+            comboIndicator.timeout = setTimeout(() => {
+                comboIndicator.style.display = 'none';
+                combo = 0;
+            }, 2000);
         }
 
         function nextStage() {
@@ -456,29 +461,37 @@
             }
         }
 
+        let activePowerUp = null;
+        let powerUpTimeout = null;
+
         function applyPowerUp(type) {
+            clearTimeout(powerUpTimeout);
             switch (type) {
                 case sprites.shield:
                     playerShield += 1;
                     powerUpIndicator.textContent = '🛡️';
+                    activePowerUp = 'shield';
                     break;
                 case sprites.extraBullets:
                     playerBulletType = 'triple';
                     powerUpIndicator.textContent = '🔫';
-                    setTimeout(() => {
-                        playerBulletType = 'normal';
-                        powerUpIndicator.textContent = '';
-                    }, 10000);
+                    activePowerUp = 'triple';
+                    powerUpTimeout = setTimeout(() => expirePowerUp(), 10000);
                     break;
                 case sprites.missile:
                     playerBulletType = 'missile';
                     powerUpIndicator.textContent = '🚀';
-                    setTimeout(() => {
-                        playerBulletType = 'normal';
-                        powerUpIndicator.textContent = '';
-                    }, 10000);
+                    activePowerUp = 'missile';
+                    powerUpTimeout = setTimeout(() => expirePowerUp(), 10000);
                     break;
             }
+        }
+
+        function expirePowerUp() {
+            if (activePowerUp === 'shield') return; // Shield doesn't expire
+            playerBulletType = 'normal';
+            powerUpIndicator.textContent = '';
+            activePowerUp = null;
         }
 
         function endGame() {
