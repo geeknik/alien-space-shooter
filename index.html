@@ -94,6 +94,7 @@
         let playerShield = 0;
         let playerBulletType = 'normal';
         let gameActive = false;
+        let gamePaused = false;
         let difficultyMultiplier = 1;
 
         const sprites = {
@@ -272,19 +273,21 @@
 
         function checkCollision(bullet) {
             const aliens = document.querySelectorAll('.sprite');
+            const bulletX = parseInt(bullet.style.left);
+            const bulletY = parseInt(bullet.style.top);
             aliens.forEach(alien => {
                 if (alien.innerHTML === sprites.alien) {
-                    const alienRect = alien.getBoundingClientRect();
-                    const bulletRect = bullet.getBoundingClientRect();
+                    const alienX = parseInt(alien.style.left);
+                    const alienY = parseInt(alien.style.top);
                     if (
-                        bulletRect.left < alienRect.right &&
-                        bulletRect.right > alienRect.left &&
-                        bulletRect.top < alienRect.bottom &&
-                        bulletRect.bottom > alienRect.top
+                        bulletX < alienX + 24 &&
+                        bulletX + 5 > alienX &&
+                        bulletY < alienY + 24 &&
+                        bulletY + 5 > alienY
                     ) {
                         removeSprite(alien);
                         removeSprite(bullet);
-                        showExplosion(alienRect.left, alienRect.top);
+                        showExplosion(alienX, alienY);
                         updateScore(10);
                         aliensRemaining--;
                         if (aliensRemaining === 0) {
@@ -296,20 +299,22 @@
         }
 
         function checkPlayerCollision(bullet) {
-            const playerRect = player.getBoundingClientRect();
-            const bulletRect = bullet.getBoundingClientRect();
+            const playerX = parseInt(player.style.left);
+            const playerY = parseInt(player.style.top);
+            const bulletX = parseInt(bullet.style.left);
+            const bulletY = parseInt(bullet.style.top);
             if (
-                bulletRect.left < playerRect.right &&
-                bulletRect.right > playerRect.left &&
-                bulletRect.top < playerRect.bottom &&
-                bulletRect.bottom > playerRect.top
+                bulletX < playerX + 24 &&
+                bulletX + 5 > playerX &&
+                bulletY < playerY + 24 &&
+                bulletY + 5 > playerY
             ) {
                 removeSprite(bullet);
                 if (playerShield > 0) {
                     playerShield--;
-                    showExplosion(playerRect.left, playerRect.top);
+                    showExplosion(playerX, playerY);
                 } else {
-                    showExplosion(playerRect.left, playerRect.top);
+                    showExplosion(playerX, playerY);
                     endGame();
                 }
             }
@@ -445,22 +450,30 @@ function startGame() {
         }
 
         function updateLeaderboard(newScore) {
-            let scores = JSON.parse(localStorage.getItem('highScores')) || [];
-            scores.push(newScore);
-            scores.sort((a, b) => b - a);
-            scores = scores.slice(0, 5);  // Keep only top 5 scores
-            localStorage.setItem('highScores', JSON.stringify(scores));
+            try {
+                let scores = JSON.parse(localStorage.getItem('highScores')) || [];
+                scores.push(newScore);
+                scores.sort((a, b) => b - a);
+                scores = scores.slice(0, 5);  // Keep only top 5 scores
+                localStorage.setItem('highScores', JSON.stringify(scores));
+            } catch (error) {
+                console.error('Error updating leaderboard:', error);
+            }
         }
 
         function showLeaderboard() {
-            const scores = JSON.parse(localStorage.getItem('highScores')) || [];
-            highScores.innerHTML = '';
-            scores.forEach(score => {
-                const li = document.createElement('li');
-                li.textContent = score;
-                highScores.appendChild(li);
-            });
-            leaderboard.style.display = 'block';
+            try {
+                const scores = JSON.parse(localStorage.getItem('highScores')) || [];
+                highScores.innerHTML = '';
+                scores.forEach(score => {
+                    const li = document.createElement('li');
+                    li.textContent = score;
+                    highScores.appendChild(li);
+                });
+                leaderboard.style.display = 'block';
+            } catch (error) {
+                console.error('Error showing leaderboard:', error);
+            }
         }
 
         function hideLeaderboard() {
@@ -470,7 +483,6 @@ function startGame() {
         restartButton.addEventListener('click', resetGame);
 
         createStars();
-        moveStars();
         startGame();
     </script>
 </body>
