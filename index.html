@@ -590,32 +590,13 @@
             requestAnimationFrame(gameLoop);
         }
 
-        function startGame() {
-            resetGame();  // Reset the game before starting
-            gameActive = true;
-            gamePaused = false;
-            createPlayer();
-            startStage();
-            shootingInterval = setInterval(shoot, 500);
-            requestAnimationFrame(gameLoop);
-        }
-
         function gameLoop() {
             if (!gameActive) return;
             if (!gamePaused) {
-                updateGame();
-                renderGame();
+                moveStars();
+                // Add any other game update logic here
             }
             requestAnimationFrame(gameLoop);
-        }
-
-        function updateGame() {
-            moveStars();
-            // Add any other game update logic here
-        }
-
-        function renderGame() {
-            // Add any rendering logic here
         }
 
         function pauseGame() {
@@ -660,34 +641,25 @@
                     star.style.top = `${y}px`;
                 }
             });
-            requestAnimationFrame(moveStars);
         }
 
         function updateLeaderboard(newScore) {
-            try {
-                let scores = JSON.parse(localStorage.getItem('highScores')) || [];
-                scores.push(newScore);
-                scores.sort((a, b) => b - a);
-                scores = scores.slice(0, 5);  // Keep only top 5 scores
-                localStorage.setItem('highScores', JSON.stringify(scores));
-            } catch (error) {
-                console.error('Error updating leaderboard:', error);
-            }
+            let scores = JSON.parse(localStorage.getItem('highScores')) || [];
+            scores.push(newScore);
+            scores.sort((a, b) => b - a);
+            scores = scores.slice(0, 5);  // Keep only top 5 scores
+            localStorage.setItem('highScores', JSON.stringify(scores));
         }
 
         function showLeaderboard() {
-            try {
-                const scores = JSON.parse(localStorage.getItem('highScores')) || [];
-                highScores.innerHTML = '';
-                scores.forEach(score => {
-                    const li = document.createElement('li');
-                    li.textContent = score;
-                    highScores.appendChild(li);
-                });
-                leaderboard.style.display = 'block';
-            } catch (error) {
-                console.error('Error showing leaderboard:', error);
-            }
+            const scores = JSON.parse(localStorage.getItem('highScores')) || [];
+            highScores.innerHTML = '';
+            scores.forEach(score => {
+                const li = document.createElement('li');
+                li.textContent = score;
+                highScores.appendChild(li);
+            });
+            leaderboard.style.display = 'block';
         }
 
         function hideLeaderboard() {
@@ -698,9 +670,6 @@
             hideLeaderboard();
             startGame();
         });
-
-        // Initialize the game
-        let startMessage;
 
         function initGame() {
             resetGame();
@@ -725,8 +694,6 @@
             startMessage.style.border = '2px solid #fff';
             startMessage.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.5)';
             gameArea.appendChild(startMessage);
-            
-            startMessage.addEventListener('click', startGame);
         }
 
         function removeStartMessage() {
@@ -735,24 +702,10 @@
             }
         }
 
-        function startGame() {
-            if (gameActive) return;
-            removeStartMessage();
-            resetGame();
-            gameActive = true;
-            gamePaused = false;
-            createPlayer();
-            startStage();
-            shootingInterval = setInterval(shoot, 500);
-            requestAnimationFrame(gameLoop);
-            // Remove the click event listener after starting the game
-            gameArea.removeEventListener('click', startGame);
-        }
-
         // Initialize the game
         initGame();
 
-        // Add the click event listener directly to the game area
+        // Add the click event listener to the game area
         gameArea.addEventListener('click', function(event) {
             if (!gameActive) {
                 startGame();
