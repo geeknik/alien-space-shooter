@@ -565,6 +565,10 @@
             powerUpIndicator.textContent = '';
             comboIndicator.textContent = '';
 
+            // Remove all existing sprites
+            const sprites = document.querySelectorAll('.sprite');
+            sprites.forEach(sprite => sprite.remove());
+
             // Recreate game elements
             createStars();
             hideLeaderboard();
@@ -679,7 +683,7 @@
         }
 
         restartButton.addEventListener('click', () => {
-            resetGame();
+            hideLeaderboard();
             startGame();
         });
 
@@ -706,7 +710,11 @@
             startMessage.style.padding = '10px 20px';
             startMessage.style.borderRadius = '5px';
             startMessage.style.zIndex = '100';
+            startMessage.style.border = '2px solid #fff';
+            startMessage.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.5)';
             gameArea.appendChild(startMessage);
+            
+            startMessage.addEventListener('click', startGame);
         }
 
         function removeStartMessage() {
@@ -718,6 +726,7 @@
         function startGame() {
             if (gameActive) return;
             removeStartMessage();
+            resetGame();
             gameActive = true;
             gamePaused = false;
             createPlayer();
