@@ -502,7 +502,10 @@
         }
 
         function resetGame() {
+            // Clear the game area
             gameArea.innerHTML = '<div id="score">Score: <span id="scoreValue">0</span></div><div id="stage">Stage: <span id="stageValue">1</span></div><div id="powerUpIndicator"></div><div id="comboIndicator"></div><div id="pauseOverlay">PAUSED</div>';
+    
+            // Reset game variables
             score = 0;
             stage = 1;
             playerShield = 0;
@@ -513,21 +516,35 @@
             activePowerUp = null;
             clearTimeout(powerUpTimeout);
             powerUpTimeout = null;
+            aliensRemaining = 0;
+            bossAlien = null;
 
+            // Clear any existing intervals
+            clearInterval(shootingInterval);
+
+            // Re-select DOM elements
             scoreValue = document.getElementById('scoreValue');
             stageValue = document.getElementById('stageValue');
             powerUpIndicator = document.getElementById('powerUpIndicator');
             comboIndicator = document.getElementById('comboIndicator');
             pauseOverlay = document.getElementById('pauseOverlay');
 
+            // Update display
             scoreValue.textContent = score;
             stageValue.textContent = stage;
             powerUpIndicator.textContent = '';
             comboIndicator.textContent = '';
 
+            // Recreate game elements
             createStars();
             hideLeaderboard();
-            startGame();
+
+            // Start a new game
+            gameActive = true;
+            gamePaused = false;
+            createPlayer();
+            startStage();
+            shootingInterval = setInterval(shoot, 500);
         }
 
 function startGame() {
