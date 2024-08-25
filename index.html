@@ -108,25 +108,10 @@
     </div>
 
     <script>
-        const gameArea = document.getElementById('gameArea');
-        const scoreValue = document.getElementById('scoreValue');
-        const stageValue = document.getElementById('stageValue');
-        const leaderboard = document.getElementById('leaderboard');
-        const highScores = document.getElementById('highScores');
-        const restartButton = document.getElementById('restartButton');
-        let score = 0;
-        let stage = 1;
-        let player;
-        let shootingInterval;
-        let aliensRemaining = 0;
-        let playerShield = 0;
-        let playerBulletType = 'normal';
-        let gameActive = false;
-        let gamePaused = false;
-        let difficultyMultiplier = 1;
-        let combo = 0;
-        let lastKillTime = 0;
-        let bossAlien = null;
+        let gameArea, scoreValue, stageValue, leaderboard, highScores, restartButton;
+        let score, stage, player, shootingInterval, aliensRemaining, playerShield, playerBulletType;
+        let gameActive, gamePaused, difficultyMultiplier, combo, lastKillTime, bossAlien;
+        let powerUpIndicator, comboIndicator, pauseOverlay, startMessage;
 
         const sprites = {
             player: '🚀',
@@ -140,9 +125,82 @@
             bossAlien: '👹'
         };
 
-        let powerUpIndicator;
-        let comboIndicator;
-        let pauseOverlay;
+        function initGame() {
+            console.log('Initializing game...');
+            gameArea = document.getElementById('gameArea');
+            scoreValue = document.getElementById('scoreValue');
+            stageValue = document.getElementById('stageValue');
+            leaderboard = document.getElementById('leaderboard');
+            highScores = document.getElementById('highScores');
+            restartButton = document.getElementById('restartButton');
+            powerUpIndicator = document.getElementById('powerUpIndicator');
+            comboIndicator = document.getElementById('comboIndicator');
+            pauseOverlay = document.getElementById('pauseOverlay');
+
+            resetGame();
+            createStars();
+            displayStartMessage();
+
+            gameArea.addEventListener('click', function(event) {
+                console.log('Game area clicked');
+                if (!gameActive) {
+                    startGame();
+                }
+            });
+
+            restartButton.addEventListener('click', () => {
+                console.log('Restart button clicked');
+                hideLeaderboard();
+                startGame();
+            });
+        }
+
+        function resetGame() {
+            console.log('Resetting game...');
+            score = 0;
+            stage = 1;
+            aliensRemaining = 0;
+            playerShield = 0;
+            playerBulletType = 'normal';
+            gameActive = false;
+            gamePaused = false;
+            difficultyMultiplier = 1;
+            combo = 0;
+            lastKillTime = 0;
+            bossAlien = null;
+
+            // Clear the game area
+            gameArea.innerHTML = '<div id="score">Score: <span id="scoreValue">0</span></div><div id="stage">Stage: <span id="stageValue">1</span></div><div id="powerUpIndicator"></div><div id="comboIndicator"></div><div id="pauseOverlay">PAUSED</div>';
+
+            // Re-select DOM elements
+            scoreValue = document.getElementById('scoreValue');
+            stageValue = document.getElementById('stageValue');
+            powerUpIndicator = document.getElementById('powerUpIndicator');
+            comboIndicator = document.getElementById('comboIndicator');
+            pauseOverlay = document.getElementById('pauseOverlay');
+
+            // Update display
+            scoreValue.textContent = score;
+            stageValue.textContent = stage;
+            powerUpIndicator.textContent = '';
+            comboIndicator.textContent = '';
+
+            // Clear any existing intervals
+            clearInterval(shootingInterval);
+        }
+
+        function startGame() {
+            console.log('Starting game...');
+            if (gameActive) return;
+            removeStartMessage();
+            resetGame();
+            gameActive = true;
+            gamePaused = false;
+            createPlayer();
+            startStage();
+            shootingInterval = setInterval(shoot, 500);
+            requestAnimationFrame(gameLoop);
+        }
 
         function createSprite(type, x, y) {
             const sprite = document.createElement('div');
@@ -671,13 +729,8 @@
             startGame();
         });
 
-        function initGame() {
-            resetGame();
-            createStars();
-            displayStartMessage();
-        }
-
         function displayStartMessage() {
+            console.log('Displaying start message...');
             startMessage = document.createElement('div');
             startMessage.textContent = 'Click to Start';
             startMessage.style.position = 'absolute';
@@ -697,20 +750,14 @@
         }
 
         function removeStartMessage() {
+            console.log('Removing start message...');
             if (startMessage && startMessage.parentNode) {
                 startMessage.parentNode.removeChild(startMessage);
             }
         }
 
-        // Initialize the game
-        initGame();
-
-        // Add the click event listener to the game area
-        gameArea.addEventListener('click', function(event) {
-            if (!gameActive) {
-                startGame();
-            }
-        });
+        // Initialize the game when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', initGame);
     </script>
 </body>
 </html>
