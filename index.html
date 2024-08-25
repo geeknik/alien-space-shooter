@@ -170,10 +170,10 @@
         function createPlayer() {
             player = createSprite('player', 150, 350);
             gameArea.addEventListener('mousemove', (e) => {
-                if (!gameActive) return;
+                if (!gameActive || gamePaused) return;
                 const rect = gameArea.getBoundingClientRect();
                 const x = e.clientX - rect.left - 12;
-                player.style.left = `${Math.max(0, Math.min(x, 276))}px`;
+                player.style.left = `${Math.max(0, Math.min(x, gameArea.clientWidth - 24))}px`;
             });
         }
 
@@ -185,15 +185,15 @@
             let dy = (Math.random() - 0.5) * 2 * difficultyMultiplier;
 
             const moveAlien = () => {
-                if (!gameActive) {
+                if (!gameActive || gamePaused) {
                     removeSprite(alien);
                     return;
                 }
                 const x = parseInt(alien.style.left);
                 const y = parseInt(alien.style.top);
 
-                if (x <= 0 || x >= 276) dx = -dx;
-                if (y <= 20 || y >= 133) dy = -dy;
+                if (x <= 0 || x >= gameArea.clientWidth - 24) dx = -dx;
+                if (y <= 20 || y >= gameArea.clientHeight / 3) dy = -dy;
 
                 moveSprite(alien, dx, dy);
 
@@ -202,7 +202,7 @@
                 }
 
                 if (alien.parentNode) {
-                    setTimeout(() => requestAnimationFrame(moveAlien), 1000 / (30 * difficultyMultiplier));
+                    requestAnimationFrame(moveAlien);
                 }
             };
             moveAlien();
@@ -309,29 +309,42 @@
 
         function checkCollision(bullet) {
             const aliens = document.querySelectorAll('.sprite');
-            const bulletX = parseInt(bullet.style.left);
-            const bulletY = parseInt(bullet.style.top);
+            const bulletRect = bullet.getBoundingClientRect();
             aliens.forEach(alien => {
-                if (alien.innerHTML === sprites.alien) {
-                    const alienX = parseInt(alien.style.left);
-                    const alienY = parseInt(alien.style.top);
+                if (alien.innerHTML === sprites.alien || alien.innerHTML === sprites.bossAlien) {
+                    const alienRect = alien.getBoundingClientRect();
                     if (
-                        bulletX < alienX + 24 &&
-                        bulletX + 5 > alienX &&
-                        bulletY < alienY + 24 &&
-                        bulletY + 5 > alienY
+                        bulletRect.left < alienRect.right &&
+                        bulletRect.right > alienRect.left &&
+                        bulletRect.top < alienRect.bottom &&
+                        bulletRect.bottom > alienRect.top
                     ) {
-                        removeSprite(alien);
-                        removeSprite(bullet);
-                        showExplosion(alienX, alienY);
-                        updateScore(10);
-                        aliensRemaining--;
-                        if (aliensRemaining === 0) {
-                            nextStage();
+                        if (alien.innerHTML === sprites.bossAlien) {
+                            handleBossHit(alien);
+                        } else {
+                            removeSprite(alien);
+                            showExplosion(alienRect.left, alienRect.top);
+                            updateScore(10);
+                            aliensRemaining--;
+                            if (aliensRemaining === 0 && !bossAlien) {
+                                nextStage();
+                            }
                         }
+                        removeSprite(bullet);
                     }
                 }
             });
+        }
+
+        function handleBossHit(boss) {
+            boss.health -= 1;
+            if (boss.health <= 0) {
+                removeSprite(boss);
+                showExplosion(parseInt(boss.style.left), parseInt(boss.style.top));
+                updateScore(50);
+                bossAlien = null;
+                nextStage();
+            }
         }
 
         function checkPlayerCollision(bullet) {
@@ -404,22 +417,24 @@
 
         function createBossAlien() {
             if (!gameActive) return;
-            bossAlien = createSprite('bossAlien', 138, 50);
+            bossAlien = createSprite('bossAlien', gameArea.clientWidth / 2 - 24, 50);
             bossAlien.style.fontSize = '48px';
-            let health = stage * 10;
+            bossAlien.health = stage * 10;
             let dx = 2 * difficultyMultiplier;
 
             const moveBossAlien = () => {
                 if (!gameActive || !bossAlien) return;
                 const x = parseInt(bossAlien.style.left);
-                if (x <= 0 || x >= 252) dx = -dx;
+                if (x <= 0 || x >= gameArea.clientWidth - 48) dx = -dx;
                 moveSprite(bossAlien, dx, 0);
 
                 if (Math.random() < 0.05 * difficultyMultiplier) {
                     shootAlienBullet(bossAlien);
                 }
 
-                requestAnimationFrame(moveBossAlien);
+                if (bossAlien && bossAlien.parentNode) {
+                    requestAnimationFrame(moveBossAlien);
+                }
             };
             moveBossAlien();
 
@@ -469,7 +484,7 @@
             switch (type) {
                 case sprites.shield:
                     playerShield += 1;
-                    powerUpIndicator.textContent = '🛡️';
+                    powerUpIndicator.textContent = '🛡️ x' + playerShield;
                     activePowerUp = 'shield';
                     break;
                 case sprites.extraBullets:
@@ -485,6 +500,21 @@
                     powerUpTimeout = setTimeout(() => expirePowerUp(), 10000);
                     break;
             }
+            updatePowerUpDisplay();
+        }
+
+        function updatePowerUpDisplay() {
+            let display = '';
+            if (playerShield > 0) {
+                display += '🛡️ x' + playerShield + ' ';
+            }
+            if (activePowerUp === 'triple') {
+                display += '🔫 ';
+            }
+            if (activePowerUp === 'missile') {
+                display += '🚀 ';
+            }
+            powerUpIndicator.textContent = display.trim();
         }
 
         function expirePowerUp() {
