@@ -733,23 +733,15 @@
             startStage();
             shootingInterval = setInterval(shoot, 500);
             requestAnimationFrame(gameLoop);
+            // Remove the click event listener after starting the game
+            gameArea.removeEventListener('click', startGame);
         }
-
-        // Remove the event listener from gameArea
-        // gameArea.addEventListener('click', startGame);
 
         // Initialize the game
         initGame();
 
-        // Add this function to handle game area clicks
-        function handleGameAreaClick(event) {
-            if (!gameActive) {
-                startGame();
-            }
-        }
-
-        // Add the click event listener to the game area
-        gameArea.addEventListener('click', handleGameAreaClick);
+        // Add the click event listener directly to the game area
+        gameArea.addEventListener('click', startGame);
     </script>
 </body>
 </html>
