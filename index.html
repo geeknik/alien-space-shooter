@@ -702,7 +702,31 @@
         startMessage.style.transform = 'translate(-50%, -50%)';
         startMessage.style.fontSize = '24px';
         startMessage.style.cursor = 'pointer';
+        startMessage.style.color = '#fff';
+        startMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        startMessage.style.padding = '10px 20px';
+        startMessage.style.borderRadius = '5px';
+        startMessage.style.zIndex = '100';
         gameArea.appendChild(startMessage);
+
+        // Function to remove start message
+        function removeStartMessage() {
+            if (startMessage && startMessage.parentNode) {
+                startMessage.parentNode.removeChild(startMessage);
+            }
+        }
+
+        // Modify startGame function to remove the start message
+        function startGame() {
+            removeStartMessage();
+            resetGame();  // Reset the game before starting
+            gameActive = true;
+            gamePaused = false;
+            createPlayer();
+            startStage();
+            shootingInterval = setInterval(shoot, 500);
+            requestAnimationFrame(gameLoop);
+        }
     </script>
 </body>
 </html>
