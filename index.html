@@ -137,6 +137,11 @@
             comboIndicator = document.getElementById('comboIndicator');
             pauseOverlay = document.getElementById('pauseOverlay');
 
+            if (!gameArea) {
+                console.error('Game area not found!');
+                return;
+            }
+
             resetGame();
             createStars();
             displayStartMessage();
@@ -148,11 +153,15 @@
                 }
             });
 
-            restartButton.addEventListener('click', () => {
-                console.log('Restart button clicked');
-                hideLeaderboard();
-                startGame();
-            });
+            if (restartButton) {
+                restartButton.addEventListener('click', () => {
+                    console.log('Restart button clicked');
+                    hideLeaderboard();
+                    startGame();
+                });
+            } else {
+                console.warn('Restart button not found');
+            }
         }
 
         function resetGame() {
