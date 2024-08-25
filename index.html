@@ -539,12 +539,10 @@
             createStars();
             hideLeaderboard();
 
-            // Start a new game
-            gameActive = true;
+            // Prepare for a new game
+            gameActive = false;
             gamePaused = false;
             createPlayer();
-            startStage();
-            shootingInterval = setInterval(shoot, 500);
         }
 
 function startGame() {
@@ -631,10 +629,13 @@ function startGame() {
             leaderboard.style.display = 'none';
         }
 
-        restartButton.addEventListener('click', resetGame);
+        restartButton.addEventListener('click', () => {
+            resetGame();
+            startGame();
+        });
 
         createStars();
-        startGame();
+        moveStars();
     </script>
 </body>
 </html>
