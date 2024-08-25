@@ -572,10 +572,10 @@
             // Prepare for a new game
             gameActive = false;
             gamePaused = false;
-            createPlayer();
         }
 
-function startGame() {
+        function startGame() {
+            resetGame();  // Reset the game before starting
             gameActive = true;
             gamePaused = false;
             createPlayer();
@@ -683,8 +683,26 @@ function startGame() {
             startGame();
         });
 
+        // Initialize the game
         resetGame();
-        startGame();
+        
+        // Add event listener to start the game when clicking on the game area
+        gameArea.addEventListener('click', function() {
+            if (!gameActive) {
+                startGame();
+            }
+        });
+
+        // Display a message to click to start
+        const startMessage = document.createElement('div');
+        startMessage.textContent = 'Click to Start';
+        startMessage.style.position = 'absolute';
+        startMessage.style.top = '50%';
+        startMessage.style.left = '50%';
+        startMessage.style.transform = 'translate(-50%, -50%)';
+        startMessage.style.fontSize = '24px';
+        startMessage.style.cursor = 'pointer';
+        gameArea.appendChild(startMessage);
     </script>
 </body>
 </html>
