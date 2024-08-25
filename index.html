@@ -735,11 +735,21 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Add event listener to start the game when clicking on the game area
-        gameArea.addEventListener('click', startGame);
+        // Remove the event listener from gameArea
+        // gameArea.addEventListener('click', startGame);
 
         // Initialize the game
         initGame();
+
+        // Add this function to handle game area clicks
+        function handleGameAreaClick(event) {
+            if (!gameActive) {
+                startGame();
+            }
+        }
+
+        // Add the click event listener to the game area
+        gameArea.addEventListener('click', handleGameAreaClick);
     </script>
 </body>
 </html>
