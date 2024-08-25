@@ -581,6 +581,25 @@ function startGame() {
             createPlayer();
             startStage();
             shootingInterval = setInterval(shoot, 500);
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            if (!gamePaused) {
+                updateGame();
+                renderGame();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updateGame() {
+            moveStars();
+            // Add any other game update logic here
+        }
+
+        function renderGame() {
+            // Add any rendering logic here
         }
 
         function pauseGame() {
