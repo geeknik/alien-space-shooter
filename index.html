@@ -153,6 +153,12 @@
                 }
             });
 
+            // Move the restart button event listener here
+            setupRestartButton();
+        }
+
+        function setupRestartButton() {
+            restartButton = document.getElementById('restartButton');
             if (restartButton) {
                 restartButton.addEventListener('click', () => {
                     console.log('Restart button clicked');
@@ -733,10 +739,7 @@
             leaderboard.style.display = 'none';
         }
 
-        restartButton.addEventListener('click', () => {
-            hideLeaderboard();
-            startGame();
-        });
+        // Event listener for restart button is now handled in setupRestartButton()
 
         function displayStartMessage() {
             console.log('Displaying start message...');
