@@ -372,7 +372,7 @@
             
             const comboPoints = points * combo;
             score += comboPoints;
-            scoreValue.textContent = score;
+            document.getElementById('scoreValue').textContent = score;
             comboIndicator.textContent = `Combo: x${combo}`;
             comboIndicator.style.display = 'block';
             clearTimeout(comboIndicator.timeout);
@@ -502,14 +502,29 @@
         }
 
         function resetGame() {
-            gameArea.innerHTML = '<div id="score">Score: <span id="scoreValue">0</span></div><div id="stage">Stage: <span id="stageValue">1</span></div>';
+            gameArea.innerHTML = '<div id="score">Score: <span id="scoreValue">0</span></div><div id="stage">Stage: <span id="stageValue">1</span></div><div id="powerUpIndicator"></div><div id="comboIndicator"></div><div id="pauseOverlay">PAUSED</div>';
             score = 0;
             stage = 1;
             playerShield = 0;
             playerBulletType = 'normal';
             difficultyMultiplier = 1;
+            combo = 0;
+            lastKillTime = 0;
+            activePowerUp = null;
+            clearTimeout(powerUpTimeout);
+            powerUpTimeout = null;
+
+            scoreValue = document.getElementById('scoreValue');
+            stageValue = document.getElementById('stageValue');
+            powerUpIndicator = document.getElementById('powerUpIndicator');
+            comboIndicator = document.getElementById('comboIndicator');
+            pauseOverlay = document.getElementById('pauseOverlay');
+
             scoreValue.textContent = score;
             stageValue.textContent = stage;
+            powerUpIndicator.textContent = '';
+            comboIndicator.textContent = '';
+
             createStars();
             hideLeaderboard();
             startGame();
