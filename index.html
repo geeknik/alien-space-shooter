@@ -421,10 +421,31 @@
 
 function startGame() {
             gameActive = true;
+            gamePaused = false;
             createPlayer();
             startStage();
             shootingInterval = setInterval(shoot, 500);
         }
+
+        function pauseGame() {
+            gamePaused = true;
+            clearInterval(shootingInterval);
+        }
+
+        function resumeGame() {
+            gamePaused = false;
+            shootingInterval = setInterval(shoot, 500);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'p' || e.key === 'P') {
+                if (gamePaused) {
+                    resumeGame();
+                } else {
+                    pauseGame();
+                }
+            }
+        });
 
         function createStars() {
             for (let i = 0; i < 50; i++) {
