@@ -140,9 +140,9 @@
             bossAlien: '👹'
         };
 
-        const powerUpIndicator = document.getElementById('powerUpIndicator');
-        const comboIndicator = document.getElementById('comboIndicator');
-        const pauseOverlay = document.getElementById('pauseOverlay');
+        let powerUpIndicator;
+        let comboIndicator;
+        let pauseOverlay;
 
         function createSprite(type, x, y) {
             const sprite = document.createElement('div');
@@ -579,6 +579,18 @@
         }
 
         function startGame() {
+            if (gameActive) return;
+            removeStartMessage();
+            resetGame();
+            gameActive = true;
+            gamePaused = false;
+            createPlayer();
+            startStage();
+            shootingInterval = setInterval(shoot, 500);
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
             resetGame();  // Reset the game before starting
             gameActive = true;
             gamePaused = false;
@@ -741,7 +753,11 @@
         initGame();
 
         // Add the click event listener directly to the game area
-        gameArea.addEventListener('click', startGame);
+        gameArea.addEventListener('click', function(event) {
+            if (!gameActive) {
+                startGame();
+            }
+        });
     </script>
 </body>
 </html>
