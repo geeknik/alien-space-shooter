@@ -684,42 +684,40 @@
         });
 
         // Initialize the game
-        resetGame();
-        
-        // Add event listener to start the game when clicking on the game area
-        gameArea.addEventListener('click', function() {
-            if (!gameActive) {
-                startGame();
-            }
-        });
+        let startMessage;
 
-        // Display a message to click to start
-        const startMessage = document.createElement('div');
-        startMessage.textContent = 'Click to Start';
-        startMessage.style.position = 'absolute';
-        startMessage.style.top = '50%';
-        startMessage.style.left = '50%';
-        startMessage.style.transform = 'translate(-50%, -50%)';
-        startMessage.style.fontSize = '24px';
-        startMessage.style.cursor = 'pointer';
-        startMessage.style.color = '#fff';
-        startMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        startMessage.style.padding = '10px 20px';
-        startMessage.style.borderRadius = '5px';
-        startMessage.style.zIndex = '100';
-        gameArea.appendChild(startMessage);
+        function initGame() {
+            resetGame();
+            createStars();
+            displayStartMessage();
+        }
 
-        // Function to remove start message
+        function displayStartMessage() {
+            startMessage = document.createElement('div');
+            startMessage.textContent = 'Click to Start';
+            startMessage.style.position = 'absolute';
+            startMessage.style.top = '50%';
+            startMessage.style.left = '50%';
+            startMessage.style.transform = 'translate(-50%, -50%)';
+            startMessage.style.fontSize = '24px';
+            startMessage.style.cursor = 'pointer';
+            startMessage.style.color = '#fff';
+            startMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            startMessage.style.padding = '10px 20px';
+            startMessage.style.borderRadius = '5px';
+            startMessage.style.zIndex = '100';
+            gameArea.appendChild(startMessage);
+        }
+
         function removeStartMessage() {
             if (startMessage && startMessage.parentNode) {
                 startMessage.parentNode.removeChild(startMessage);
             }
         }
 
-        // Modify startGame function to remove the start message
         function startGame() {
+            if (gameActive) return;
             removeStartMessage();
-            resetGame();  // Reset the game before starting
             gameActive = true;
             gamePaused = false;
             createPlayer();
@@ -727,6 +725,12 @@
             shootingInterval = setInterval(shoot, 500);
             requestAnimationFrame(gameLoop);
         }
+
+        // Add event listener to start the game when clicking on the game area
+        gameArea.addEventListener('click', startGame);
+
+        // Initialize the game
+        initGame();
     </script>
 </body>
 </html>
